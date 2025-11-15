@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+ENV/
+
+# LangGraph
+.langgraph_api/
+uploads/
+chroma_db/
+
+# UV
+uv.lock
+
+# Environment
+.env.local
