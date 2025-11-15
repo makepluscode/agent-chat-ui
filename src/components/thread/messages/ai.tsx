@@ -14,6 +14,7 @@ import { ThreadView } from "../agent-inbox";
 import { useQueryState, parseAsBoolean } from "nuqs";
 import { GenericInterruptView } from "./generic-interrupt";
 import { useArtifact } from "../artifact";
+import { EmbeddingStatus, parseEmbeddingStatus } from "../embedding-status";
 
 function CustomComponent({
   message,
@@ -160,7 +161,20 @@ export function AssistantMessage({
         ) : (
           <>
             {contentString.length > 0 && (
-              <div className="py-1">
+              <div className="py-1 space-y-3">
+                {/* Show embedding status if PDF processing */}
+                {(() => {
+                  const embeddingSteps = parseEmbeddingStatus(contentString);
+                  if (embeddingSteps.length > 0) {
+                    return (
+                      <EmbeddingStatus 
+                        steps={embeddingSteps}
+                        currentStep={isLoading ? embeddingSteps.find(s => s.status === "processing")?.id : undefined}
+                      />
+                    );
+                  }
+                  return null;
+                })()}
                 <MarkdownText>{contentString}</MarkdownText>
               </div>
             )}

@@ -95,7 +95,7 @@ def process_pdf_node(state: AgentState) -> AgentState:
 
         if not pdf_result:
             state["messages"].append(
-                AIMessage(content="❌ No PDF file found in the message.")
+                AIMessage(content="❌ **PDF Processing Error**\n\nNo PDF file found in the message.")
             )
             return state
 
@@ -105,39 +105,56 @@ def process_pdf_node(state: AgentState) -> AgentState:
         result = pdf_processor.process_pdf(pdf_data, filename)
 
         if result['success']:
-            # Create success message
-            response = f"""✅ **PDF 파싱 성공**
+            # Create success message with detailed embedding status
+            response = f"""✅ **PDF Parsing and Embedding Complete**
 
-📄 **파일 정보**
-- 파일명: {result['filename']}
-- 총 페이지: {result['total_pages']}
-- 총 문자 수: {result['total_chars']:,}
+## 📄 File Information
+- **Filename**: {result['filename']}
+- **Total Pages**: {result['total_pages']} pages
+- **Total Characters**: {result['total_chars']:,} characters
 
-📊 **청킹 정보**
-- 생성된 청크: {result['chunk_count']}
-- 평균 청크 크기: {result['avg_chunk_size']:.0f} 문자
-- 청크 크기: 1000 (overlap: 200)
+## 📊 Processing Steps
 
-📝 **페이지별 미리보기**
+### ✅ 1. PDF Text Extraction
+- Extracted text from {result['total_pages']} pages
+
+### ✅ 2. Text Chunking
+- **Chunks Created**: {result['chunk_count']} chunks
+- **Average Chunk Size**: {result['avg_chunk_size']:.0f} characters
+- **Chunk Settings**: 1000 chars (overlap: 200 chars)
+
+### ✅ 3. Embedding Generation
+- **Embedding Model**: {result.get('embedding_model', 'BAAI/bge-m3')}
+- **Embeddings Generated**: {result.get('embeddings_generated', result['chunk_count'])} embeddings
+- **Embedding Dimension**: 1024 dimensions
+
+### ✅ 4. Vector Storage
+- **Stored Chunks**: {result.get('embeddings_stored', result['chunk_count'])} chunks
+- **Collection**: {result.get('collection_name', 'pdf_documents')}
+- **Storage Location**: ChromaDB (local)
+
+## 📝 Page Preview
 """
             # Add preview of first 3 pages
             for page_data in result['page_texts'][:3]:
                 preview = page_data['text'][:200].replace('\n', ' ')
-                response += f"\n**페이지 {page_data['page']}** ({page_data['char_count']} 문자)\n"
+                response += f"\n**Page {page_data['page']}** ({page_data['char_count']} characters)\n"
                 response += f"{preview}...\n"
 
             if result['total_pages'] > 3:
-                response += f"\n... 외 {result['total_pages'] - 3}개 페이지"
+                response += f"\n... and {result['total_pages'] - 3} more pages"
+
+            response += "\n\nYou can now ask questions about this document!"
 
             state["messages"].append(AIMessage(content=response))
         else:
             state["messages"].append(
-                AIMessage(content=f"❌ **PDF 파싱 실패**\n\n오류: {result['error']}")
+                AIMessage(content=f"❌ **PDF Processing Failed**\n\nError: {result['error']}")
             )
 
     except Exception as e:
         state["messages"].append(
-            AIMessage(content=f"❌ **처리 중 오류 발생**\n\n{str(e)}")
+            AIMessage(content=f"❌ **Processing Error**\n\n{str(e)}")
         )
 
     return state
