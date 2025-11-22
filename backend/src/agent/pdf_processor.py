@@ -1,8 +1,10 @@
-from pypdf import PdfReader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from typing import Dict, List
 import io
 from datetime import datetime
+from typing import Dict
+
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from pypdf import PdfReader
+
 from src.agent.embedding_service import EmbeddingService
 from src.agent.vector_store import VectorStore
 
@@ -59,13 +61,15 @@ class PDFProcessor:
             # Map chunks back to pages (simplified - assumes chunks maintain page order)
             metadatas = []
             current_timestamp = datetime.now().isoformat()
-            
+
             for i, chunk in enumerate(chunks):
                 # Try to determine which page this chunk belongs to
                 # Simple heuristic: find the page number mentioned in chunk
                 page_num = 1
                 for page_data in page_texts:
-                    if f"Page {page_data['page']}" in chunk or f"페이지 {page_data['page']}" in chunk:
+                    page_ref = f"Page {page_data['page']}"
+                    korean_ref = f"페이지 {page_data['page']}"
+                    if page_ref in chunk or korean_ref in chunk:
                         page_num = page_data['page']
                         break
 
@@ -85,6 +89,9 @@ class PDFProcessor:
             )
 
             # Build result
+            avg_size = (
+                sum(len(c) for c in chunks) / len(chunks) if chunks else 0
+            )
             result = {
                 'success': True,
                 'filename': filename,
@@ -93,7 +100,7 @@ class PDFProcessor:
                 'page_texts': page_texts,
                 'chunks': chunks,
                 'chunk_count': len(chunks),
-                'avg_chunk_size': sum(len(c) for c in chunks) / len(chunks) if chunks else 0,
+                'avg_chunk_size': avg_size,
                 'embeddings_generated': len(embeddings),
                 'embeddings_stored': stored_count,
                 'embedding_model': self.embedding_service.model_name,

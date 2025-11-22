@@ -1,9 +1,9 @@
 """Vector store service using ChromaDB."""
+import os
+from typing import Dict, List, Optional
+
 import chromadb
 from chromadb.config import Settings
-import os
-from typing import List, Dict, Optional
-from datetime import datetime
 
 
 class VectorStore:

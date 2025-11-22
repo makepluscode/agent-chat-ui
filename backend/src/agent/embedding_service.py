@@ -1,13 +1,14 @@
 """Embedding service using BGE-M3 model with Korean support."""
-from sentence_transformers import SentenceTransformer
 import os
 from typing import List
+
+from sentence_transformers import SentenceTransformer
 
 
 class EmbeddingService:
     """
     Service for generating embeddings using BGE-M3.
-    
+
     BGE-M3 is a multilingual model that supports Korean, English, and 100+ languages.
     It uses dense, sparse, and multi-vector representations for better retrieval.
     """
