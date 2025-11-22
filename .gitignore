@@ -28,3 +28,20 @@ dist-ssr
 .env
 .next/
 next-env.d.ts
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+ENV/
+env/
+.pytest_cache/
+.mypy_cache/
+*.egg
