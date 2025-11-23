@@ -154,25 +154,27 @@ def process_pdf_node(state: AgentState) -> AgentState:
         content = _get_message_content(last_message)
 
         if not isinstance(content, list):
-            state["messages"].append(
-                AIMessage(
-                    content="❌ **PDF Processing Error**\n\nInvalid message format."
-                )
-            )
-            return state
+            return {
+                "messages": [
+                    AIMessage(
+                        content="❌ **PDF Processing Error**\n\nInvalid message format."
+                    )
+                ]
+            }
 
         pdf_result = _extract_pdf_from_message(content)
 
         if not pdf_result:
-            state["messages"].append(
-                AIMessage(
-                    content=(
-                        "❌ **PDF Processing Error**\n\n"
-                        "No PDF file found in the message."
+            return {
+                "messages": [
+                    AIMessage(
+                        content=(
+                            "❌ **PDF Processing Error**\n\n"
+                            "No PDF file found in the message."
+                        )
                     )
-                )
-            )
-            return state
+                ]
+            }
 
         pdf_data, filename = pdf_result
 
@@ -226,42 +228,244 @@ def process_pdf_node(state: AgentState) -> AgentState:
 
             response += "\n\nYou can now ask questions about this document!"
 
-            state["messages"].append(AIMessage(content=response))
+            return {"messages": [AIMessage(content=response)]}
         else:
             error_msg = f"❌ **PDF Processing Failed**\n\nError: {result['error']}"
-            state["messages"].append(AIMessage(content=error_msg))
+            return {"messages": [AIMessage(content=error_msg)]}
 
     except Exception as e:
-        state["messages"].append(
-            AIMessage(content=f"❌ **Processing Error**\n\n{str(e)}")
+        return {
+            "messages": [AIMessage(content=f"❌ **Processing Error**\n\n{str(e)}")]
+        }
+
+
+def build_chunks_table(retrieved_chunks: list) -> str:
+    """Build markdown table with detailed chunk information."""
+    if not retrieved_chunks:
+        return ""
+
+    # Build table header
+    table = (
+        "| # | Relevance | Document | Page | Similarity | Size | Content Preview |\n"
+        "|---|-----------|----------|------|------------|------|------------------|\n"
+    )
+
+    for i, chunk in enumerate(retrieved_chunks, 1):
+        metadata = chunk['metadata']
+        distance = chunk['distance']
+        text = chunk['document']
+
+        # Relevance stars
+        if distance < 0.20:
+            stars = "⭐⭐⭐⭐⭐"
+        elif distance < 0.30:
+            stars = "⭐⭐⭐⭐"
+        elif distance < 0.40:
+            stars = "⭐⭐⭐"
+        elif distance < 0.50:
+            stars = "⭐⭐"
+        else:
+            stars = "⭐"
+
+        # Get document name
+        filename = metadata.get('filename', 'Unknown')
+        page = metadata.get('page', 'N/A')
+        chunk_size = metadata.get('chunk_size', len(text))
+
+        # Preview text (first 80 chars, remove newlines)
+        preview = text[:80].replace('\n', ' ').replace('|', '•')
+        if len(text) > 80:
+            preview += "..."
+
+        # Build table row
+        table += (
+            f"| {i} | {stars} | {filename} | {page} | "
+            f"{distance:.4f} | {chunk_size} | {preview} |\n"
         )
 
-    return state
+    return table
+
+
+def build_sources_summary(retrieved_chunks: list) -> str:
+    """Build detailed source information with chunk references."""
+    if not retrieved_chunks:
+        return ""
+
+    sources = {}
+
+    # Collect unique documents and their chunks
+    for i, chunk in enumerate(retrieved_chunks, 1):
+        metadata = chunk['metadata']
+        filename = metadata.get('filename', 'Unknown')
+        page = metadata.get('page', 'N/A')
+        chunk_index = metadata.get('chunk_index', 'N/A')
+        distance = chunk['distance']
+
+        if filename not in sources:
+            sources[filename] = {
+                'pages': set(),
+                'chunks': [],
+                'total_chars': 0
+            }
+
+        sources[filename]['pages'].add(page)
+        sources[filename]['chunks'].append({
+            'number': i,
+            'page': page,
+            'chunk_index': chunk_index,
+            'distance': distance,
+            'size': metadata.get('chunk_size', 0),
+            'text': chunk['document'][:200]
+        })
+        sources[filename]['total_chars'] += metadata.get('chunk_size', 0)
+
+    # Build detailed source summary
+    summary_parts = []
+
+    for filename, info in sources.items():
+        pages_str = ", ".join(map(str, sorted(info['pages'])))
+        total_size = info['total_chars']
+        num_chunks = len(info['chunks'])
+
+        # Document header
+        doc_summary = (
+            f"### 📎 **{filename}**\n\n"
+            f"**Pages Referenced:** {pages_str}  \n"
+            f"**Chunks Used:** {num_chunks}  \n"
+            f"**Total Characters:** {total_size:,}\n\n"
+        )
+
+        # Chunk details table
+        doc_summary += (
+            "| Chunk | Page | Position | Score | Quality | Size | Content |\n"
+            "|-------|------|----------|-------|---------|------|----------|\n"
+        )
+
+        for chunk_info in info['chunks']:
+            score = chunk_info['distance']
+            if score < 0.20:
+                quality = "Perfect"
+            elif score < 0.30:
+                quality = "Excellent"
+            elif score < 0.40:
+                quality = "Good"
+            elif score < 0.50:
+                quality = "Fair"
+            else:
+                quality = "Weak"
+
+            content_preview = chunk_info['text'].replace('\n', ' ').replace('|', '•')[:60]
+            if len(chunk_info['text']) > 60:
+                content_preview += "..."
+
+            doc_summary += (
+                f"| #{chunk_info['number']} | {chunk_info['page']} | "
+                f"Idx:{chunk_info['chunk_index']} | "
+                f"{score:.4f} | {quality} | "
+                f"{chunk_info['size']} | {content_preview} |\n"
+            )
+
+        summary_parts.append(doc_summary)
+
+    return "\n".join(summary_parts)
 
 
 def chat_node(state: AgentState) -> AgentState:
-    """Simple chat using Ollama."""
+    """Chat using Ollama with RAG chunk retrieval and source display."""
     try:
         from langchain_core.messages import convert_to_messages
 
         messages = convert_to_messages(state["messages"])
         text_messages = []
+        user_query = None
 
+        # Extract text messages and find last user query
         for msg in messages:
             text_content = _extract_text_from_multimodal(msg.content)
 
             if text_content.strip():
                 if isinstance(msg, HumanMessage):
-                    text_messages.append(HumanMessage(content=text_content))
+                    # Use original message with updated content to preserve ID
+                    msg.content = text_content
+                    text_messages.append(msg)
+                    user_query = text_content
                 elif isinstance(msg, AIMessage):
-                    text_messages.append(AIMessage(content=text_content))
+                    # Use original message with updated content to preserve ID
+                    msg.content = text_content
+                    text_messages.append(msg)
 
-        if text_messages:
-            response = llm.invoke(text_messages)
-            state["messages"].append(response)
+        if not text_messages or not user_query:
+            return state
+
+        # Try RAG retrieval only if:
+        # 1. Query is not about PDF processing
+        # 2. Query is reasonably long (not just greetings)
+        # 3. ChromaDB has documents (collection not empty)
+        retrieved_chunks = None
+        should_use_rag = False
+
+        # Skip RAG for short queries (greetings, small talk)
+        if len(user_query.strip()) > 10:
+            # Skip RAG for PDF processing queries
+            if "process" not in user_query.lower() and "pdf" not in user_query.lower():
+                should_use_rag = True
+
+        if should_use_rag:
+            try:
+                # Check if vector store has any documents
+                store_stats = pdf_processor.vector_store.get_collection_stats()
+                if store_stats.get('document_count', 0) > 0:
+                    query_embedding = pdf_processor.embedding_service.embed_query(
+                        user_query
+                    )
+                    retrieved_chunks = pdf_processor.vector_store.search(
+                        query_embedding=query_embedding,
+                        n_results=5
+                    )
+            except Exception:
+                # If RAG fails, continue without it
+                pass
+
+        # Build context from retrieved chunks
+        if retrieved_chunks and len(retrieved_chunks) > 0:
+            context_text = "\n\n".join([
+                f"[{chunk['metadata']['filename']} - Page {chunk['metadata']['page']}]\n"
+                f"{chunk['document']}"
+                for chunk in retrieved_chunks
+            ])
+
+            # Add context instruction to messages
+            context_msg = HumanMessage(
+                content=(
+                    f"Here is relevant context from the document:\n\n{context_text}\n\n"
+                    f"Use this information to answer: {user_query}"
+                )
+            )
+            text_messages.append(context_msg)
+
+        # Generate response
+        response = llm.invoke(text_messages)
+        response_text = response.content
+
+        # Format response with chunk sources
+        if retrieved_chunks and len(retrieved_chunks) > 0:
+            chunks_table = build_chunks_table(retrieved_chunks)
+            sources_summary = build_sources_summary(retrieved_chunks)
+
+            final_response = (
+                f"{response_text}\n\n"
+                f"---\n\n"
+                f"📚 **Retrieved Source Chunks**\n\n"
+                f"{chunks_table}\n\n"
+                f"📄 **Document References**\n\n"
+                f"{sources_summary}"
+            )
+
+            return {"messages": [AIMessage(content=final_response)]}
+        else:
+            return {"messages": [response]}
+
     except Exception as e:
-        state["messages"].append(
-            AIMessage(content=f"❌ **LLM 오류**\n\n{str(e)}")
-        )
-
-    return state
+        return {
+            "messages": [AIMessage(content=f"❌ **오류**\n\n{str(e)}")]
+        }
