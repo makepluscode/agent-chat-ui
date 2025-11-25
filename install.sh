@@ -87,6 +87,11 @@ uv venv
 source .venv/bin/activate
 uv pip install -r requirements.txt
 
+# Install langgraph CLI and API packages
+echo "=== Installing langgraph-cli and langgraph-api ==="
+uv pip install langgraph-cli
+uv pip install "langgraph-cli[inmem]"
+
 # Optional: pre-download BGE-M3 only if using sentence_transformers
 if [ "${SKIP_MODEL_DOWNLOAD:-0}" -ne 1 ] && [ "${EMBEDDING_PROVIDER:-sentence_transformers}" = "sentence_transformers" ]; then
   echo "=== Downloading BGE-M3 embedding model ==="
