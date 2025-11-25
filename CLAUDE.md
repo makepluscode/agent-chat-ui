@@ -60,7 +60,7 @@ uv run langgraph dev
 # API docs available at http://localhost:2024/docs
 ```
 
-**Note:** The backend uses ChromaDB for vector storage (persisted at `./chroma_db`) and BGE-M3 embeddings. Update Python dependencies in `pyproject.toml` rather than `requirements.txt`.
+**Note:** The backend uses ChromaDB for vector storage (persisted at `backend/chroma_db/`) and BGE-M3 embeddings. The ChromaDB data persists across sessions, so uploaded PDFs remain searchable even after restarting the server. Update Python dependencies in `pyproject.toml` rather than `requirements.txt`. The `langgraph.json` configuration points to `../env` for environment variables, so the `.env` file should be in the project root directory (not in `backend/`).
 
 ## Architecture
 
@@ -225,6 +225,7 @@ The `backend/` directory contains a LangGraph application for PDF processing and
 
 ### Backend Structure and Components
 
+- **Graph configuration** (`langgraph.json`): Defines the graph entry point (`agent: ./src/agent/graph.py:graph`) and environment variable location
 - **State management** (`src/agent/state.py`): Defines input schema with message list and optional content blocks for routing decisions
 - **Graph definition** (`src/agent/graph.py`): Main LangGraph workflow that orchestrates nodes
 - **Routing** (`src/agent/nodes.py`): Auto-routes between PDF processing and chat nodes based on input type
@@ -296,8 +297,14 @@ Backend dependencies are declared in `pyproject.toml`. The `requirements.txt` is
 ### Initial Setup
 1. Clone the repository: `git clone https://github.com/langchain-ai/agent-chat-ui.git`
 2. Install frontend dependencies: `pnpm install`
-3. (Optional) Set up backend in `backend/` directory following Backend setup above
-4. Create `.env` file with environment variables (see Environment Variables section)
+3. (Optional) Set up backend:
+   - Navigate to `backend/` directory
+   - Create virtual environment: `uv venv`
+   - Activate: `source .venv/bin/activate` (Linux/Mac) or `.venv\Scripts\activate` (Windows)
+   - Install dependencies: `uv pip install -r requirements.txt`
+   - Ensure Ollama is running with your chosen model
+4. Create `.env` file in project root with environment variables (see Environment Variables section)
+   - Note: Backend's `langgraph.json` references `../env`, so use root directory
 
 ### Code Quality
 Before committing, run:
