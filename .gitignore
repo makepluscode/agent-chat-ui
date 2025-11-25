@@ -45,3 +45,10 @@ env/
 .pytest_cache/
 .mypy_cache/
 *.egg
+
+# Backend runtime artifacts
+backend/chroma_db/
+chroma_db/
+backend/uploads/
+uploads/
+backend/.langgraph_api/
