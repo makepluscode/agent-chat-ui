@@ -249,7 +249,8 @@ start_services() {
         cd backend
         source .venv/bin/activate
         echo -e "${BLUE}[Backend]${NC} Starting LangGraph dev server on port $BACKEND_PORT..."
-        uv run langgraph dev > /dev/null 2>&1
+        echo -e "${BLUE}[Backend]${NC} Server will be accessible from external browsers"
+        uv run langgraph dev --host 0.0.0.0 > /dev/null 2>&1
     ) &
     BACKEND_PID=$!
     echo "$BACKEND_PID" > "$BACKEND_PID_FILE"
@@ -374,8 +375,9 @@ case "$COMMAND" in
             cd backend
             source .venv/bin/activate
             echo -e "${BLUE}[Backend]${NC} Starting LangGraph dev server on port $BACKEND_PORT..."
+            echo -e "${BLUE}[Backend]${NC} Server will be accessible from external browsers"
             echo ""
-            uv run langgraph dev 2>&1 | sed 's/^/[Backend] /'
+            uv run langgraph dev --host 0.0.0.0 2>&1 | sed 's/^/[Backend] /'
         ) &
         BACKEND_PID=$!
 

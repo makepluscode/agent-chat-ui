@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowRight } from "lucide-react";
 import { PasswordInput } from "@/components/ui/password-input";
 import { getApiKey } from "@/lib/api-key";
+import { normalizeApiUrl } from "@/lib/utils";
 import { useThreads } from "./Thread";
 import { toast } from "sonner";
 
@@ -51,7 +52,9 @@ async function checkGraphStatus(
   apiKey: string | null,
 ): Promise<boolean> {
   try {
-    const res = await fetch(`${apiUrl}/info`, {
+    // Normalize the API URL for external browser access
+    const normalizedUrl = normalizeApiUrl(apiUrl);
+    const res = await fetch(`${normalizedUrl}/info`, {
       ...(apiKey && {
         headers: {
           "X-Api-Key": apiKey,
@@ -79,8 +82,12 @@ const StreamSession = ({
 }) => {
   const [threadId, setThreadId] = useQueryState("threadId");
   const { getThreads, setThreads } = useThreads();
+  
+  // Normalize API URL for external browser access
+  const normalizedApiUrl = normalizeApiUrl(apiUrl);
+  
   const streamValue = useTypedStream({
-    apiUrl,
+    apiUrl: normalizedApiUrl,
     apiKey: apiKey ?? undefined,
     assistantId,
     threadId: threadId ?? null,
@@ -104,10 +111,11 @@ const StreamSession = ({
   useEffect(() => {
     checkGraphStatus(apiUrl, apiKey).then((ok) => {
       if (!ok) {
+        const normalizedUrl = normalizeApiUrl(apiUrl);
         toast.error("Failed to connect to LangGraph server", {
           description: () => (
             <p>
-              Please ensure your graph is running at <code>{apiUrl}</code> and
+              Please ensure your graph is running at <code>{normalizedUrl}</code> and
               your API key is correctly set (if connecting to a deployed graph).
             </p>
           ),
