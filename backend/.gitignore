@@ -18,4 +18,8 @@ chroma_db/
 uv.lock
 
 # Environment
+# Note: Backend does NOT use .env or .env.local
+# LangGraph reads from project root .env (configured in langgraph.json)
+.env
 .env.local
+.env.local.unused
