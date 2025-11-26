@@ -169,3 +169,21 @@
     font-weight: normal;
   }
 }
+
+/* Next.js devtools indicator 완전히 숨기기 */
+[data-next-mark-loading],
+[data-next-mark-loading] *,
+button[style*="position: fixed"][style*="bottom"],
+a[style*="position: fixed"][style*="bottom"],
+button[style*="bottom"],
+a[style*="bottom"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  left: -9999px !important;
+  top: -9999px !important;
+  width: 0 !important;
+  height: 0 !important;
+}

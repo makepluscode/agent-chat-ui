@@ -26,6 +26,7 @@ import {
 import { useQueryState, parseAsBoolean } from "nuqs";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
 import ThreadHistory from "./history";
+import RightSidebar from "./right-sidebar";
 import { toast } from "sonner";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { Label } from "../ui/label";
@@ -119,6 +120,10 @@ export function Thread() {
   const [chatHistoryOpen, setChatHistoryOpen] = useQueryState(
     "chatHistoryOpen",
     parseAsBoolean.withDefault(false),
+  );
+  const [rightSidebarOpen, setRightSidebarOpen] = useQueryState(
+    "rightSidebarOpen",
+    parseAsBoolean.withDefault(true),
   );
   const [hideToolCalls, setHideToolCalls] = useQueryState(
     "hideToolCalls",
@@ -273,12 +278,7 @@ export function Thread() {
         </motion.div>
       </div>
 
-      <div
-        className={cn(
-          "grid w-full grid-cols-[1fr_0fr] transition-all duration-500",
-          artifactOpen && "grid-cols-[3fr_2fr]",
-        )}
-      >
+      <div className="relative flex w-full">
         <motion.div
           className={cn(
             "relative flex min-w-0 flex-1 flex-col overflow-hidden",
@@ -287,11 +287,16 @@ export function Thread() {
           layout={isLargeScreen}
           animate={{
             marginLeft: chatHistoryOpen ? (isLargeScreen ? 300 : 0) : 0,
-            width: chatHistoryOpen
-              ? isLargeScreen
+            marginRight: rightSidebarOpen && isLargeScreen && !artifactOpen ? 300 : 0,
+            width: chatHistoryOpen && rightSidebarOpen && isLargeScreen && !artifactOpen
+              ? "calc(100% - 600px)"
+              : chatHistoryOpen && isLargeScreen && !artifactOpen
                 ? "calc(100% - 300px)"
-                : "100%"
-              : "100%",
+                : rightSidebarOpen && isLargeScreen && !artifactOpen
+                  ? "calc(100% - 300px)"
+                  : artifactOpen && isLargeScreen
+                    ? "calc(100% - 40vw)"
+                    : "100%",
           }}
           transition={
             isLargeScreen
@@ -551,18 +556,51 @@ export function Thread() {
             />
           </StickToBottom>
         </motion.div>
-        <div className="relative flex flex-col border-l">
-          <div className="absolute inset-0 flex min-w-[30vw] flex-col">
-            <div className="grid grid-cols-[1fr_auto] border-b p-4">
-              <ArtifactTitle className="truncate overflow-hidden" />
-              <button
-                onClick={closeArtifact}
-                className="cursor-pointer"
+        {!artifactOpen && (
+          <div className="relative hidden lg:flex">
+            <motion.div
+              className="absolute right-0 z-20 h-full overflow-hidden border-l bg-white"
+              style={{ width: 300 }}
+              animate={
+                isLargeScreen
+                  ? { x: rightSidebarOpen ? 0 : 300 }
+                  : { x: rightSidebarOpen ? 0 : 300 }
+              }
+              initial={{ x: 300 }}
+              transition={
+                isLargeScreen
+                  ? { type: "spring", stiffness: 300, damping: 30 }
+                  : { duration: 0 }
+              }
+            >
+              <div
+                className="relative h-full"
+                style={{ width: 300 }}
               >
-                <XIcon className="size-5" />
-              </button>
+                <RightSidebar />
+              </div>
+            </motion.div>
+          </div>
+        )}
+        <div
+          className={cn(
+            "grid grid-cols-[1fr_0fr] transition-all duration-500",
+            artifactOpen && "grid-cols-[3fr_2fr]",
+          )}
+        >
+          <div className="relative flex flex-col border-l">
+            <div className="absolute inset-0 flex min-w-[30vw] flex-col">
+              <div className="grid grid-cols-[1fr_auto] border-b p-4">
+                <ArtifactTitle className="truncate overflow-hidden" />
+                <button
+                  onClick={closeArtifact}
+                  className="cursor-pointer"
+                >
+                  <XIcon className="size-5" />
+                </button>
+              </div>
+              <ArtifactContent className="relative flex-grow" />
             </div>
-            <ArtifactContent className="relative flex-grow" />
           </div>
         </div>
       </div>

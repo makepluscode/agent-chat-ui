@@ -12,7 +12,8 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PanelRightOpen, PanelRightClose } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { PanelRightOpen, PanelRightClose, FileText } from "lucide-react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 function ThreadList({
@@ -23,6 +24,20 @@ function ThreadList({
   onThreadClick?: (threadId: string) => void;
 }) {
   const [threadId, setThreadId] = useQueryState("threadId");
+
+  if (threads.length === 0) {
+    return (
+      <div className="flex h-full w-full flex-col items-center justify-center px-4">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <FileText className="size-8 text-gray-400" />
+          <p className="text-sm text-gray-500 leading-relaxed">
+            저장된 소스가 여기에 표시됩니다<br />
+            위의 소스 추가를 클릭하여 PDF, 웹사이트, 텍스트, 동영상 또는 오디오 파일을 추가하세요.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full w-full flex-col items-start justify-start gap-2 overflow-y-scroll [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent">
@@ -110,14 +125,25 @@ export default function ThreadHistory() {
             )}
           </Button>
           <h1 className="text-xl font-semibold tracking-tight">
-            Thread History
+            Documents
           </h1>
         </div>
-        {threadsLoading ? (
-          <ThreadHistoryLoading />
-        ) : (
-          <ThreadList threads={threads} />
-        )}
+        <Separator />
+        <div className="w-full px-4 pt-4">
+          <Button
+            className="w-full rounded-lg"
+            variant="default"
+          >
+            + 소스추가
+          </Button>
+        </div>
+        <div className="flex-1 overflow-hidden">
+          {threadsLoading ? (
+            <ThreadHistoryLoading />
+          ) : (
+            <ThreadList threads={threads} />
+          )}
+        </div>
       </div>
       <div className="lg:hidden">
         <Sheet
@@ -129,15 +155,26 @@ export default function ThreadHistory() {
         >
           <SheetContent
             side="left"
-            className="flex lg:hidden"
+            className="flex flex-col lg:hidden"
           >
             <SheetHeader>
-              <SheetTitle>Thread History</SheetTitle>
+              <SheetTitle>Documents</SheetTitle>
             </SheetHeader>
-            <ThreadList
-              threads={threads}
-              onThreadClick={() => setChatHistoryOpen((o) => !o)}
-            />
+            <Separator />
+            <div className="w-full px-4 pt-4 pb-4">
+              <Button
+                className="w-full rounded-lg"
+                variant="default"
+              >
+                + 소스추가
+              </Button>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <ThreadList
+                threads={threads}
+                onThreadClick={() => setChatHistoryOpen((o) => !o)}
+              />
+            </div>
           </SheetContent>
         </Sheet>
       </div>

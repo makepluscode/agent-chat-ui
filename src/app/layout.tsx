@@ -3,6 +3,7 @@ import "./globals.css";
 import { Inter } from "next/font/google";
 import React from "react";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { DevtoolsReplacer } from "@/components/devtools-replacer";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -23,7 +24,10 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className={inter.className}>
-        <NuqsAdapter>{children}</NuqsAdapter>
+        <NuqsAdapter>
+          {children}
+          <DevtoolsReplacer />
+        </NuqsAdapter>
       </body>
     </html>
   );
