@@ -60,7 +60,15 @@ uv run langgraph dev
 # API docs available at http://localhost:2024/docs
 ```
 
-**Note:** The backend uses ChromaDB for vector storage (persisted at `backend/chroma_db/`) and BGE-M3 embeddings. The ChromaDB data persists across sessions, so uploaded PDFs remain searchable even after restarting the server. Update Python dependencies in `pyproject.toml` rather than `requirements.txt`. The `langgraph.json` configuration points to `../env` for environment variables, so the `.env` file should be in the project root directory (not in `backend/`).
+**Note:** The backend uses ChromaDB for vector storage (persisted at `backend/chroma_db/`) and BGE-M3 embeddings. The ChromaDB data persists across sessions, so uploaded PDFs remain searchable even after restarting the server. Update Python dependencies in `pyproject.toml` rather than `requirements.txt`.
+
+**IMPORTANT - Environment Variables:** The `langgraph.json` configuration points to `../env` for environment variables, which means the backend reads from the **project root `.env` file** (NOT `backend/.env`). Always configure backend environment variables (OLLAMA_BASE_URL, OLLAMA_MODEL, EMBEDDING_MODEL, etc.) in the root `.env` file.
+
+**⚠️ About backend/.env:**
+- `backend/.env` is **NOT used** by LangGraph (it reads from root `.env`)
+- You may see a warning "backend/.env.example not found" when using `./run.sh` - **this is safe to ignore**
+- If `backend/.env` exists, it will be ignored by the backend (but may cause confusion)
+- Best practice: Do not create `backend/.env` or `backend/.env.example` to avoid confusion
 
 ## Architecture
 
@@ -113,10 +121,24 @@ The application uses React Context providers to manage global state:
 
 ### Environment Variables
 
-**Local Development:**
+**⚠️ CRITICAL: Backend Environment Configuration**
+The backend reads environment variables from the **project root `.env` file** (NOT `backend/.env`). This is configured in `backend/langgraph.json` which points to `../env`. All backend configuration (Ollama, embeddings, LangSmith) must be in the root `.env` file.
+
+**Local Development (.env in project root):**
 ```bash
+# Frontend
 NEXT_PUBLIC_API_URL=http://localhost:2024
 NEXT_PUBLIC_ASSISTANT_ID=agent
+
+# Backend (LangGraph reads from root .env)
+OLLAMA_BASE_URL=http://172.22.160.1:11434  # Use Windows host IP for WSL, or localhost for native
+OLLAMA_MODEL=qwen3:8b
+EMBEDDING_MODEL=BAAI/bge-m3
+
+# Optional: LangSmith tracing
+LANGSMITH_TRACING=true
+LANGSMITH_API_KEY=<your-key>
+LANGSMITH_PROJECT=<your-project>
 ```
 
 **Production (API Passthrough):**
@@ -127,7 +149,10 @@ NEXT_PUBLIC_API_URL="https://my-website.com/api"  # Client connects here
 LANGSMITH_API_KEY="lsv2_..."  # Server-side only, injected by proxy
 ```
 
-**IMPORTANT:** Never prefix `LANGSMITH_API_KEY` with `NEXT_PUBLIC_` as it's a secret used server-side only.
+**IMPORTANT:**
+- Never prefix `LANGSMITH_API_KEY` with `NEXT_PUBLIC_` as it's a secret used server-side only
+- Do NOT create `backend/.env` - use root `.env` only
+- For WSL users running Ollama on Windows host, use Windows gateway IP (e.g., `http://172.22.160.1:11434`) instead of `localhost`
 
 ### API Passthrough
 
@@ -297,14 +322,17 @@ Backend dependencies are declared in `pyproject.toml`. The `requirements.txt` is
 ### Initial Setup
 1. Clone the repository: `git clone https://github.com/langchain-ai/agent-chat-ui.git`
 2. Install frontend dependencies: `pnpm install`
-3. (Optional) Set up backend:
+3. **Create `.env` file in project root** (NOT in `backend/`) with environment variables (see Environment Variables section)
+   - **CRITICAL:** Backend's `langgraph.json` references `../env`, which means it reads from the project root `.env` file
+   - Configure Ollama URL, model, and embeddings in the root `.env` file
+   - For WSL users: Use Windows host IP (e.g., `http://172.22.160.1:11434`) for `OLLAMA_BASE_URL`
+4. (Optional) Set up backend:
    - Navigate to `backend/` directory
    - Create virtual environment: `uv venv`
    - Activate: `source .venv/bin/activate` (Linux/Mac) or `.venv\Scripts\activate` (Windows)
    - Install dependencies: `uv pip install -r requirements.txt`
    - Ensure Ollama is running with your chosen model
-4. Create `.env` file in project root with environment variables (see Environment Variables section)
-   - Note: Backend's `langgraph.json` references `../env`, so use root directory
+   - **Do NOT create `backend/.env`** - backend reads from root `.env`
 
 ### Code Quality
 Before committing, run:
