@@ -370,7 +370,22 @@ export function Thread() {
                   className="p-4"
                   tooltip="New thread"
                   variant="ghost"
-                  onClick={() => setThreadId(null)}
+                  onClick={() => {
+                    // Send clear DB message if thread exists
+                    if (threadId) {
+                      const clearMessage: Message = {
+                        id: uuidv4(),
+                        type: "human",
+                        content: "__CLEAR_DB__",
+                      };
+                      stream.submit(
+                        { messages: [...stream.messages, clearMessage] },
+                        { streamMode: ["values"] },
+                      );
+                    }
+                    // Reset thread
+                    setThreadId(null);
+                  }}
                 >
                   <SquarePen className="size-5" />
                 </TooltipIconButton>

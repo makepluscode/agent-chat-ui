@@ -111,6 +111,7 @@ def route_message(state: AgentState) -> str:
     Determine which node to route to based on the message.
 
     Returns:
+        "clear_db" if the message is "__CLEAR_DB__"
         "process_pdf" if the message contains a PDF file
         "chat" for all other messages
     """
@@ -120,6 +121,10 @@ def route_message(state: AgentState) -> str:
     # Only process human messages
     if content is None:
         return "chat"
+
+    # Check for clear database command
+    if isinstance(content, str) and content.strip() == "__CLEAR_DB__":
+        return "clear_db"
 
     # Check if content is a list (multimodal message)
     if isinstance(content, list):
@@ -368,6 +373,22 @@ def build_sources_summary(retrieved_chunks: list) -> str:
         summary_parts.append(doc_summary)
 
     return "\n".join(summary_parts)
+
+
+def clear_db_node(state: AgentState) -> AgentState:
+    """Clear all documents from ChromaDB."""
+    try:
+        result = pdf_processor.vector_store.clear_all()
+        response = f"""✅ **ChromaDB Cleared**
+
+{result['message']}
+
+You can now start fresh with new documents!"""
+        return {"messages": [AIMessage(content=response)]}
+    except Exception as e:
+        return {
+            "messages": [AIMessage(content=f"❌ **Clear Error**\n\n{str(e)}")]
+        }
 
 
 def chat_node(state: AgentState) -> AgentState:

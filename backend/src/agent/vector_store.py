@@ -136,3 +136,28 @@ class VectorStore:
             return len(results['ids'])
 
         return 0
+
+    def clear_all(self) -> Dict:
+        """
+        Clear all documents from the collection and reset ChromaDB.
+
+        Returns:
+            Dictionary with status and deleted count
+        """
+        # Get current count before deletion
+        count = self.collection.count()
+
+        # Delete the collection
+        self.client.delete_collection(name=self.collection_name)
+
+        # Recreate the collection
+        self.collection = self.client.get_or_create_collection(
+            name=self.collection_name,
+            metadata={"hnsw:space": "cosine"}
+        )
+
+        return {
+            'status': 'success',
+            'deleted_count': count,
+            'message': f'Cleared {count} documents from ChromaDB'
+        }
