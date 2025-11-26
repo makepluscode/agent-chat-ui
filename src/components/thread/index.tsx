@@ -12,7 +12,7 @@ import {
   DO_NOT_RENDER_ID_PREFIX,
   ensureToolCallsHaveResponses,
 } from "@/lib/ensure-tool-responses";
-import { LangGraphLogoSVG } from "../icons/langgraph";
+import { MountainIconSVG } from "../icons/mountain";
 import { TooltipIconButton } from "./tooltip-icon-button";
 import {
   ArrowDown,
@@ -351,12 +351,12 @@ export function Thread() {
                     damping: 30,
                   }}
                 >
-                  <LangGraphLogoSVG
+                  <MountainIconSVG
                     width={32}
                     height={32}
                   />
-                  <span className="text-xl font-semibold tracking-tight">
-                    Agent Chat
+                  <span className="text-2xl font-dohyeon tracking-tight">
+                    거대한 AI 실험실
                   </span>
                 </motion.button>
               </div>
@@ -442,9 +442,9 @@ export function Thread() {
                 <div className="sticky bottom-0 flex flex-col items-center gap-8 bg-white">
                   {!chatStarted && (
                     <div className="flex items-center gap-3">
-                      <LangGraphLogoSVG className="h-8 flex-shrink-0" />
-                      <h1 className="text-2xl font-semibold tracking-tight">
-                        Agent Chat
+                      <MountainIconSVG className="h-8 flex-shrink-0" />
+                      <h1 className="text-3xl font-dohyeon tracking-tight">
+                        거대한 AI 실험실
                       </h1>
                     </div>
                   )}

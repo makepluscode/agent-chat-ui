@@ -1,5 +1,20 @@
 @import "tailwindcss";
 
+/* 배달의 민족 도현체 폰트 - 눈누 CDN */
+@font-face {
+  font-family: 'Dohyun';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_one@1.0/BMDOHYEON.woff') format('woff');
+  font-weight: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'BMDOHYEON';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_one@1.0/BMDOHYEON.woff') format('woff');
+  font-weight: normal;
+  font-display: swap;
+}
+
 @plugin "tailwindcss-animate";
 
 @custom-variant dark (&:is(.dark *));
@@ -147,5 +162,10 @@
 
   .shadow-inner-left {
     box-shadow: inset 9px 0 6px -1px rgb(0 0 0 / 0.02);
+  }
+
+  .font-dohyeon {
+    font-family: "Dohyun", "BMDOHYEON", sans-serif;
+    font-weight: normal;
   }
 }

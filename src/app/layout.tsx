@@ -11,7 +11,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Agent Chat",
+  title: "거대한 AI 실험실",
   description: "Agent Chat UX by LangChain",
 };
 
@@ -21,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="ko">
       <body className={inter.className}>
         <NuqsAdapter>{children}</NuqsAdapter>
       </body>
