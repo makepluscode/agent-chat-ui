@@ -178,11 +178,11 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
             <div className="flex flex-col items-start gap-2">
               <MountainIconSVG className="h-7" />
               <h1 className="text-2xl font-dohyeon tracking-tight">
-                거대한 AI 실험실
+                RAG 에이전트 실험실
               </h1>
             </div>
             <p className="text-muted-foreground">
-              거대한 AI 실험실에 오신 것을 환영합니다! 시작하기 전에
+              RAG 에이전트 실험실에 오신 것을 환영합니다! 시작하기 전에
               the URL of the deployment and the assistant / graph ID.
             </p>
           </div>

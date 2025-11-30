@@ -409,7 +409,7 @@ export function Thread() {
                     height={32}
                   />
                   <span className="text-2xl font-dohyeon tracking-tight">
-                    거대한 AI 실험실
+                    RAG 에이전트 실험실
                   </span>
                 </motion.button>
               </div>
@@ -500,7 +500,7 @@ export function Thread() {
                     <div className="flex items-center gap-3">
                       <MountainIconSVG className="h-8 flex-shrink-0" />
                       <h1 className="text-3xl font-dohyeon tracking-tight">
-                        거대한 AI 실험실
+                        RAG 에이전트 실험실
                       </h1>
                     </div>
                   )}

@@ -12,7 +12,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "거대한 AI 실험실",
+  title: "RAG 에이전트 실험실",
   description: "Agent Chat UX by LangChain",
 };
 
