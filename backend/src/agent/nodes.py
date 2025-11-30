@@ -187,7 +187,8 @@ def process_pdf_node(state: AgentState) -> AgentState:
         result = pdf_processor.process_pdf(pdf_data, filename)
 
         if result['success']:
-            # Create success message with detailed embedding status
+            # Create success message with detailed embedding status for frontend parsing
+            # Frontend will parse this and show in popup, not in chat window
             embeddings_count = result.get(
                 'embeddings_generated', result['chunk_count']
             )
@@ -231,8 +232,8 @@ def process_pdf_node(state: AgentState) -> AgentState:
             if result['total_pages'] > 3:
                 response += f"\n... and {result['total_pages'] - 3} more pages"
 
-            response += "\n\nYou can now ask questions about this document!"
-
+            # Return message with special marker for frontend to hide from chat
+            # Frontend will parse this and show in popup, not in chat window
             return {"messages": [AIMessage(content=response)]}
         else:
             error_msg = f"❌ **PDF Processing Failed**\n\nError: {result['error']}"
@@ -466,25 +467,8 @@ def chat_node(state: AgentState) -> AgentState:
 
         # Generate response
         response = llm.invoke(text_messages)
-        response_text = response.content
 
-        # Format response with chunk sources
-        if retrieved_chunks and len(retrieved_chunks) > 0:
-            chunks_table = build_chunks_table(retrieved_chunks)
-            sources_summary = build_sources_summary(retrieved_chunks)
-
-            final_response = (
-                f"{response_text}\n\n"
-                f"---\n\n"
-                f"📚 **Retrieved Source Chunks**\n\n"
-                f"{chunks_table}\n\n"
-                f"📄 **Document References**\n\n"
-                f"{sources_summary}"
-            )
-
-            return {"messages": [AIMessage(content=final_response)]}
-        else:
-            return {"messages": [response]}
+        return {"messages": [response]}
 
     except Exception as e:
         return {

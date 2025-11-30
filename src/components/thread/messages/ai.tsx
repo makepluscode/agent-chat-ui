@@ -160,24 +160,37 @@ export function AssistantMessage({
           </>
         ) : (
           <>
-            {contentString.length > 0 && (
-              <div className="py-1 space-y-3">
-                {/* Show embedding status if PDF processing */}
-                {(() => {
-                  const embeddingSteps = parseEmbeddingStatus(contentString);
-                  if (embeddingSteps.length > 0) {
-                    return (
-                      <EmbeddingStatus 
-                        steps={embeddingSteps}
-                        currentStep={isLoading ? embeddingSteps.find(s => s.status === "processing")?.id : undefined}
-                      />
-                    );
-                  }
-                  return null;
-                })()}
-                <MarkdownText>{contentString}</MarkdownText>
-              </div>
-            )}
+            {contentString.length > 0 && (() => {
+              // Hide PDF processing completion messages from chat window
+              // These messages are shown in popup dialog instead
+              const isPDFProcessingMessage = 
+                contentString.includes("PDF Parsing and Embedding Complete") ||
+                contentString.includes("✅ **PDF Parsing") ||
+                (contentString.includes("PDF Parsing") && contentString.includes("Complete"));
+              
+              if (isPDFProcessingMessage) {
+                return null;
+              }
+              
+              return (
+                <div className="py-1 space-y-3">
+                  {/* Show embedding status if PDF processing */}
+                  {(() => {
+                    const embeddingSteps = parseEmbeddingStatus(contentString);
+                    if (embeddingSteps.length > 0) {
+                      return (
+                        <EmbeddingStatus 
+                          steps={embeddingSteps}
+                          currentStep={isLoading ? embeddingSteps.find(s => s.status === "processing")?.id : undefined}
+                        />
+                      );
+                    }
+                    return null;
+                  })()}
+                  <MarkdownText>{contentString}</MarkdownText>
+                </div>
+              );
+            })()}
 
             {!hideToolCalls && (
               <>

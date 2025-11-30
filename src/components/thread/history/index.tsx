@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useThreads } from "@/providers/Thread";
 import { Thread } from "@langchain/langgraph-sdk";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { getContentString } from "../utils";
 import { useQueryState, parseAsBoolean } from "nuqs";
@@ -15,6 +15,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { PanelRightOpen, PanelRightClose, FileText } from "lucide-react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { SourceAddDialog } from "@/components/rag/source-add-dialog";
+import { SourceList } from "@/components/rag/source-list";
 
 function ThreadList({
   threads,
@@ -32,7 +34,7 @@ function ThreadList({
           <FileText className="size-8 text-gray-400" />
           <p className="text-sm text-gray-500 leading-relaxed">
             저장된 소스가 여기에 표시됩니다<br />
-            위의 소스 추가를 클릭하여 PDF, 웹사이트, 텍스트, 동영상 또는 오디오 파일을 추가하세요.
+            위의 소스 추가를 클릭하여 PDF, <span className="line-through">웹사이트, 텍스트, 동영상 또는 오디오 파일</span>을 추가하세요.
           </p>
         </div>
       </div>
@@ -96,6 +98,7 @@ export default function ThreadHistory() {
     "chatHistoryOpen",
     parseAsBoolean.withDefault(false),
   );
+  const [sourceDialogOpen, setSourceDialogOpen] = useState(false);
 
   const { getThreads, threads, setThreads, threadsLoading, setThreadsLoading } =
     useThreads();
@@ -125,7 +128,7 @@ export default function ThreadHistory() {
             )}
           </Button>
           <h1 className="text-xl font-semibold tracking-tight">
-            Documents
+            Knowledge Store
           </h1>
         </div>
         <Separator />
@@ -133,10 +136,12 @@ export default function ThreadHistory() {
           <Button
             className="w-full rounded-lg"
             variant="default"
+            onClick={() => setSourceDialogOpen(true)}
           >
             + 소스추가
           </Button>
         </div>
+        <SourceList />
         <div className="flex-1 overflow-hidden">
           {threadsLoading ? (
             <ThreadHistoryLoading />
@@ -144,6 +149,10 @@ export default function ThreadHistory() {
             <ThreadList threads={threads} />
           )}
         </div>
+        <SourceAddDialog
+          open={sourceDialogOpen}
+          onOpenChange={setSourceDialogOpen}
+        />
       </div>
       <div className="lg:hidden">
         <Sheet
@@ -158,23 +167,29 @@ export default function ThreadHistory() {
             className="flex flex-col lg:hidden"
           >
             <SheetHeader>
-              <SheetTitle>Documents</SheetTitle>
+              <SheetTitle>Knowledge Store</SheetTitle>
             </SheetHeader>
             <Separator />
             <div className="w-full px-4 pt-4 pb-4">
               <Button
                 className="w-full rounded-lg"
                 variant="default"
+                onClick={() => setSourceDialogOpen(true)}
               >
                 + 소스추가
               </Button>
             </div>
+            <SourceList />
             <div className="flex-1 overflow-hidden">
               <ThreadList
                 threads={threads}
                 onThreadClick={() => setChatHistoryOpen((o) => !o)}
               />
             </div>
+            <SourceAddDialog
+              open={sourceDialogOpen}
+              onOpenChange={setSourceDialogOpen}
+            />
           </SheetContent>
         </Sheet>
       </div>

@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
+import { useRAGSources } from "@/providers/RAGSources";
 import { ReactNode, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -148,6 +149,22 @@ export function Thread() {
   const isLoading = stream.isLoading;
 
   const lastError = useRef<string | undefined>(undefined);
+  
+  // RAG 소스 초기화를 위한 hook
+  const { clearAllSources } = useRAGSources();
+
+  // 페이지 언로드 시 소스 초기화 (페이지 새로고침/닫기)
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      clearAllSources();
+    };
+    
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [clearAllSources]);
 
   const setThreadId = (id: string | null) => {
     _setThreadId(id);
@@ -155,6 +172,21 @@ export function Thread() {
     // close artifact and reset artifact context
     closeArtifact();
     setArtifactContext({});
+    
+    // 새 대화 시작 시 RAG 소스 초기화
+    if (id === null) {
+      clearAllSources();
+      // DB도 초기화
+      const clearMessage: Message = {
+        id: uuidv4(),
+        type: "human",
+        content: "__CLEAR_DB__",
+      };
+      stream.submit(
+        { messages: [clearMessage] },
+        { streamMode: ["values"] },
+      );
+    }
   };
 
   useEffect(() => {
@@ -204,6 +236,22 @@ export function Thread() {
     if ((input.trim().length === 0 && contentBlocks.length === 0) || isLoading)
       return;
     setFirstTokenReceived(false);
+
+    // 새 대화 시작 시 (threadId가 null이고 메시지가 없을 때) RAG 소스 초기화
+    // 주: setThreadId(null)에서 이미 초기화하므로 여기서는 중복 방지를 위해 체크
+    if (!threadId && messages.length === 0) {
+      clearAllSources();
+      // DB도 초기화
+      const clearMessage: Message = {
+        id: uuidv4(),
+        type: "human",
+        content: "__CLEAR_DB__",
+      };
+      stream.submit(
+        { messages: [clearMessage] },
+        { streamMode: ["values"] },
+      );
+    }
 
     const newHumanMessage: Message = {
       id: uuidv4(),
@@ -376,6 +424,9 @@ export function Thread() {
                   tooltip="New thread"
                   variant="ghost"
                   onClick={() => {
+                    // RAG 소스 초기화
+                    clearAllSources();
+                    
                     // Send clear DB message if thread exists
                     if (threadId) {
                       const clearMessage: Message = {
@@ -512,11 +563,11 @@ export function Thread() {
                         </div>
                         <Label
                           htmlFor="file-input"
-                          className="flex cursor-pointer items-center gap-2"
+                          className="flex cursor-not-allowed items-center gap-2 opacity-50"
                         >
-                          <Plus className="size-5 text-gray-600" />
-                          <span className="text-sm text-gray-600">
-                            Upload PDF or Image
+                          <Plus className="size-5 text-gray-400" />
+                          <span className="text-sm text-gray-400">
+                            Upload Image
                           </span>
                         </Label>
                         <input
@@ -524,8 +575,9 @@ export function Thread() {
                           type="file"
                           onChange={handleFileUpload}
                           multiple
-                          accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
+                          accept="image/jpeg,image/png,image/gif,image/webp"
                           className="hidden"
+                          disabled
                         />
                         {stream.isLoading ? (
                           <Button
