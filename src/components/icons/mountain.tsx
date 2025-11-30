@@ -16,30 +16,67 @@ export function MountainIconSVG({
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
-      {/* 거대한 산 아이콘 - 계층적인 산봉우리, 크게 그리고 위로 */}
-      {/* 뒷산 */}
+      {/* 실험용 흰 쥐 아이콘 */}
+      {/* 꼬리 */}
       <path
-        d="M6 12L2 24H10L6 12Z"
-        fill="#1a3a3b"
+        d="M2 24C2 24 4 26 6 26C8 26 10 24 10 24"
+        stroke="#d1d5db"
+        strokeWidth="2"
+        strokeLinecap="round"
+        fill="none"
       />
-      {/* 중간 산 */}
-      <path
-        d="M16 2L8 24H24L16 2Z"
-        fill="#264849"
+      {/* 몸통 */}
+      <ellipse
+        cx="18"
+        cy="18"
+        rx="10"
+        ry="8"
+        fill="#f3f4f6"
+        stroke="#9ca3af"
+        strokeWidth="1"
       />
-      {/* 앞산 (가장 큰 산) */}
-      <path
-        d="M26 6L18 24H32L26 6Z"
-        fill="#3a6b6d"
+      {/* 머리 */}
+      <circle
+        cx="26"
+        cy="14"
+        r="5"
+        fill="#f3f4f6"
+        stroke="#9ca3af"
+        strokeWidth="1"
       />
-      {/* 눈 덮인 봉우리 */}
-      <path
-        d="M16 0L14 4L18 4L16 0Z"
-        fill="#ffffff"
+      {/* 왼쪽 귀 */}
+      <ellipse
+        cx="24"
+        cy="9"
+        rx="2.5"
+        ry="3.5"
+        fill="#fecdd3"
+        stroke="#9ca3af"
+        strokeWidth="0.8"
       />
-      <path
-        d="M26 6L24 10L28 10L26 6Z"
-        fill="#ffffff"
+      {/* 오른쪽 귀 */}
+      <ellipse
+        cx="29"
+        cy="10"
+        rx="2.5"
+        ry="3.5"
+        fill="#fecdd3"
+        stroke="#9ca3af"
+        strokeWidth="0.8"
+      />
+      {/* 눈 */}
+      <circle
+        cx="27"
+        cy="13"
+        r="1.2"
+        fill="#ef4444"
+      />
+      {/* 코 */}
+      <circle
+        cx="29"
+        cy="15"
+        r="0.8"
+        fill="#fca5a5"
       />
     </svg>
   );
