@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { PanelRightOpen, PanelRightClose, FileText } from "lucide-react";
+import { PanelRightOpen, PanelRightClose, FileText, AlertCircle } from "lucide-react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { SourceAddDialog } from "@/components/rag/source-add-dialog";
 import { SourceList } from "@/components/rag/source-list";
@@ -140,6 +140,12 @@ export default function ThreadHistory() {
           >
             + 소스추가
           </Button>
+          <div className="mt-3 flex w-full items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3">
+            <AlertCircle className="mt-0.5 size-4 shrink-0 text-blue-600" />
+            <p className="text-xs leading-relaxed text-blue-900">
+              위의 버튼을 사용해 Knowledge Store에 문서를 추가하세요. 현재는 PDF 파일만 업로드할 수 있습니다.
+            </p>
+          </div>
         </div>
         <SourceList />
         <div className="flex-1 overflow-hidden">
@@ -178,6 +184,12 @@ export default function ThreadHistory() {
               >
                 + 소스추가
               </Button>
+              <div className="mt-3 flex w-full items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3">
+                <AlertCircle className="mt-0.5 size-4 shrink-0 text-blue-600" />
+                <p className="text-xs leading-relaxed text-blue-900">
+                  위의 버튼을 사용해 Knowledge Store에 문서를 추가하세요. 현재는 PDF 파일만 업로드할 수 있습니다.
+                </p>
+              </div>
             </div>
             <SourceList />
             <div className="flex-1 overflow-hidden">
