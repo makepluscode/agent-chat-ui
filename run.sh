@@ -22,9 +22,9 @@ BACKEND_APP="agent-chat-backend"
 # Stop services
 stop_services() {
     echo -e "${YELLOW}🛑 Stopping services with pm2...${NC}"
-    pm2 delete $FRONTEND_APP > /dev/null 2>&1 || true
-    pm2 delete $BACKEND_APP > /dev/null 2>&1 || true
-    pm2 save --force > /dev/null 2>&1 || true
+    pnpm exec pm2 delete $FRONTEND_APP > /dev/null 2>&1 || true
+    pnpm exec pm2 delete $BACKEND_APP > /dev/null 2>&1 || true
+    pnpm exec pm2 save --force > /dev/null 2>&1 || true
     echo -e "${GREEN}✅ Services stopped${NC}"
 }
 
@@ -45,11 +45,10 @@ check_dependencies() {
     local missing=()
     if ! command -v pnpm >/dev/null 2>&1; then missing+=("pnpm"); fi
     if ! command -v uv >/dev/null 2>&1; then missing+=("uv"); fi
-    if ! command -v pm2 >/dev/null 2>&1; then missing+=("pm2"); fi
 
     if [ ${#missing[@]} -gt 0 ]; then
         echo -e "${RED}❌ Missing dependencies: ${missing[*]}${NC}"
-        echo "Please install them. e.g., 'npm install -g pnpm', 'curl -LsSf https://astral.sh/uv/install.sh | sh', 'pnpm add -g pm2'"
+        echo "Please install them. e.g., 'npm install -g pnpm', 'curl -LsSf https://astral.sh/uv/install.sh | sh'"
         exit 1
     fi
 }
@@ -77,16 +76,16 @@ start_services() {
     (
       cd backend
       source .venv/bin/activate
-      pm2 start "uv run langgraph dev --host 0.0.0.0 --port 2024" --name $BACKEND_APP
+      pnpm exec pm2 start "uv run langgraph dev --host 0.0.0.0 --port 2024" --cwd backend --name $BACKEND_APP
     )
 
 
     echo -e "${YELLOW}Starting frontend...${NC}"
-    pm2 start "sh" --name $FRONTEND_APP -- -c "cd $(pwd) && pnpm run dev"
+    pnpm exec pm2 start "sh" --name $FRONTEND_APP -- -c "cd $(pwd) && pnpm run dev"
 
     sleep 2
     echo ""
-    pm2 list
+    pnpm exec pm2 list
     echo ""
     echo -e "${GREEN}✅ Services started. Use './run.sh dev' to view logs.${NC}"
     echo -e "${YELLOW}📍 Access Frontend: http://localhost:3000${NC}"
@@ -109,7 +108,7 @@ case "$COMMAND" in
 
     dev)
         echo -e "${BLUE}👀 Tailing logs from pm2... (Press Ctrl+C to stop)${NC}"
-        pm2 logs
+        pnpm exec pm2 logs
         ;;
 
     build)
@@ -127,8 +126,8 @@ case "$COMMAND" in
         fi
         check_dependencies
         stop_services
-        pm2 start "sh" --name $FRONTEND_APP -- -c "cd $(pwd) && pnpm start"
-        pm2 list
+        pnpm exec pm2 start "sh" --name $FRONTEND_APP -- -c "cd $(pwd) && pnpm start"
+        pnpm exec pm2 list
         ;;
 
     *)
