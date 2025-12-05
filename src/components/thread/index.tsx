@@ -141,6 +141,7 @@ export function Thread() {
     dragOver,
     handlePaste,
   } = useFileUpload();
+  const { getActiveFilenames } = useRAGSources();
   const [firstTokenReceived, setFirstTokenReceived] = useState(false);
   const isLargeScreen = useMediaQuery("(min-width: 1024px)");
 
@@ -253,6 +254,8 @@ export function Thread() {
       );
     }
 
+    const activeFilenames = getActiveFilenames();
+
     const newHumanMessage: Message = {
       id: uuidv4(),
       type: "human",
@@ -260,15 +263,18 @@ export function Thread() {
         ...(input.trim().length > 0 ? [{ type: "text", text: input }] : []),
         ...contentBlocks,
       ] as Message["content"],
+      metadata: {
+        active_filenames: activeFilenames,
+      },
     };
 
     const toolMessages = ensureToolCallsHaveResponses(stream.messages);
-
-    const context =
-      Object.keys(artifactContext).length > 0 ? artifactContext : undefined;
+    const context = {
+      ...(Object.keys(artifactContext).length > 0 ? artifactContext : {}),
+    };
 
     stream.submit(
-      { messages: [...toolMessages, newHumanMessage], context },
+      { messages: [...toolMessages, newHumanMessage], context: Object.keys(context).length > 0 ? context : undefined },
       {
         streamMode: ["values"],
         streamSubgraphs: true,

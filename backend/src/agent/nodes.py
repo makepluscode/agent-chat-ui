@@ -392,7 +392,7 @@ You can now start fresh with new documents!"""
         }
 
 
-def chat_node(state: AgentState) -> AgentState:
+def chat_node(state: AgentState, config: Optional[Dict] = None) -> AgentState:
     """Chat using Ollama with RAG chunk retrieval and source display."""
     try:
         from langchain_core.messages import convert_to_messages
@@ -419,34 +419,72 @@ def chat_node(state: AgentState) -> AgentState:
         if not text_messages or not user_query:
             return state
 
-        # Try RAG retrieval only if:
-        # 1. Query is not about PDF processing
-        # 2. Query is reasonably long (not just greetings)
-        # 3. ChromaDB has documents (collection not empty)
+        # 활성 파일명 목록 가져오기 (마지막 메시지의 메타데이터에서)
+        active_filenames = None
+        last_message_raw = state["messages"][-1] if state["messages"] else None
+        
+        if last_message_raw:
+            if isinstance(last_message_raw, dict):
+                metadata = last_message_raw.get('metadata', {})
+                if isinstance(metadata, dict):
+                    active_filenames = metadata.get('active_filenames')
+            elif hasattr(last_message_raw, 'metadata'):
+                metadata = getattr(last_message_raw, 'metadata', {})
+                if isinstance(metadata, dict):
+                    active_filenames = metadata.get('active_filenames')
+        
+        print(f"[RAG Backend] 활성 파일명: {active_filenames}")
+        
         retrieved_chunks = None
         should_use_rag = False
 
-        # Skip RAG for short queries (greetings, small talk)
-        if len(user_query.strip()) > 10:
-            # Skip RAG for PDF processing queries
-            if "process" not in user_query.lower() and "pdf" not in user_query.lower():
+        # 활성 파일명이 없으면 RAG 검색 건너뛰기
+        has_active_files = (
+            active_filenames is not None and 
+            isinstance(active_filenames, list) and 
+            len(active_filenames) > 0
+        )
+        
+        if not has_active_files:
+            print("[RAG Backend] 활성 파일 없음 - RAG 검색 건너뜀")
+            # 이전 RAG 컨텍스트 메시지 제거
+            filtered_messages = [
+                msg for msg in text_messages
+                if not (isinstance(msg, HumanMessage) and 
+                       isinstance(msg.content, str) and
+                       msg.content.startswith("Here is relevant context from the document:"))
+            ]
+            response = llm.invoke(filtered_messages)
+            return {"messages": [response]}
+        else:
+            # RAG 검색 활성화 조건 확인
+            query_length = len(user_query.strip())
+            if query_length > 3 and "process" not in user_query.lower() and "pdf" not in user_query.lower():
                 should_use_rag = True
-
+        
         if should_use_rag:
             try:
-                # Check if vector store has any documents
                 store_stats = pdf_processor.vector_store.get_collection_stats()
                 if store_stats.get('document_count', 0) > 0:
-                    query_embedding = pdf_processor.embedding_service.embed_query(
-                        user_query
-                    )
+                    query_embedding = pdf_processor.embedding_service.embed_query(user_query)
+                    
+                    # 활성 파일명으로 필터링
+                    filter_metadata = None
+                    if len(active_filenames) == 1:
+                        filter_metadata = {"filename": active_filenames[0]}
+                    elif len(active_filenames) > 1:
+                        filter_metadata = {"filename": {"$in": active_filenames}}
+                    
+                    print(f"[RAG Backend] 검색 시작 - 활성 파일: {active_filenames}")
                     retrieved_chunks = pdf_processor.vector_store.search(
                         query_embedding=query_embedding,
-                        n_results=5
+                        n_results=5,
+                        filter_metadata=filter_metadata
                     )
-            except Exception:
-                # If RAG fails, continue without it
-                pass
+                    if retrieved_chunks:
+                        print(f"[RAG Backend] 검색 결과: {len(retrieved_chunks)}개 청크")
+            except Exception as e:
+                print(f"[RAG Backend] RAG 검색 오류: {str(e)}")
 
         # Build context from retrieved chunks
         if retrieved_chunks and len(retrieved_chunks) > 0:
