@@ -56,3 +56,7 @@ chroma_db/
 backend/uploads/
 uploads/
 backend/.langgraph_api/
+
+# Playwright
+playwright-report/
+test-results/
