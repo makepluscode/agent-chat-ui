@@ -348,7 +348,7 @@ export function SourceAddDialog({
         }
       );
 
-      // 타임아웃 설정 (30초)
+      // 타임아웃 설정 (180초)
       setTimeout(() => {
         if (processingRef.current && pendingFileRef.current) {
           console.error("Timeout! Processing took too long");
@@ -357,7 +357,7 @@ export function SourceAddDialog({
           pendingFileRef.current = null;
           toast.error("파일 처리 시간이 초과되었습니다.");
         }
-      }, 30000);
+      }, 180000);
     } catch (error) {
       console.error("Failed to upload PDF:", error);
       toast.error("PDF 업로드 중 오류가 발생했습니다.");
